@@ -14,7 +14,7 @@ DB_DIR = os.path.dirname(os.path.realpath(__file__))
 
 # Import databases
 sys.path.insert(1, DB_DIR)
-from db_utils import get_sentiment_data #, PlotMfcc
+from db_utils import get_sentiment_data, PlotMfcc
 
 def Secure_Voice_Channel(func):
     """Define Secure_Voice_Channel decorator."""
@@ -39,11 +39,11 @@ def generic_vns_function(input_shape, units, lr, classes=8):
 
     x = base_model.output
 
-    x = layers.GlobalAveragePooling2D()(x)     #This is used in MainCovid.py
+    #x = layers.GlobalAveragePooling2D()(x)     #This is used in MainCovid.py
 
-    #x = layers.Flatten()(x)                     #I am using Flatten because I am more familiar with it
+    x = layers.Flatten()(x)                     #I am using Flatten because I am more familiar with it
 
-    #x = layers.Dense(units, activation = 'relu')(x)    #MainCovid.py has two final dense layers
+    #x = layers.Dense(units, activation = 'relu')(x)    #MainCovid.py has two final dense layers, but we will only have one
 
     predictions = layers.Dense(units, activation= 'sigmoid')(x)
     model = models.Model(inputs=base_model.input, outputs=predictions)
@@ -57,8 +57,8 @@ def generic_vns_function(input_shape, units, lr, classes=8):
 def train_model(model, epochs, batch_size, X_train, y_train, X_test, y_test):
     """Generic Deep Learning Model training function."""
 
-    model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=epochs,
-              batch_size=batch_size, verbose=1)
+    model.fit(X_train, y_train, validation_data=None, epochs=epochs,
+              batch_size=batch_size, verbose=1)                         
     scores = model.evaluate(X_test, y_test, verbose=2)
 
     print("Baseline Error: %.2f%%" % (100-scores[1]*100))
