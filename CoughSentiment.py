@@ -52,9 +52,9 @@ def get_cough_files():
     Y=[]
     for c in df.covid19:        #We consider that covid does not sound angry
         if c == True:
-            Y.append([0, 1])
+            Y.append([0])
         elif c==False:
-            Y.append([1, 0])
+            Y.append([1])
 
     print('m =', len(wavs))
 
