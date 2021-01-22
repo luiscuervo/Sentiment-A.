@@ -14,7 +14,7 @@ import python_speech_features
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
-#sys.path.insert(1, DB_DIR)
+sys.path.insert(1, DIR_PATH)
 from db_utils import PlotMfcc, from_mp3_file_to_wav, DataFetcherSentimentSpeech
 
 
@@ -137,7 +137,7 @@ def main():
 
     # Hyperparameters
 
-    epochs = 4
+    epochs = 6
     batch_size = 220
     lr = 0.0001
     opt = Adam(lr=lr)
@@ -145,28 +145,23 @@ def main():
     # Import Datasets
     (X_train, Y_train, X_val, Y_val, X_test, Y_test) = import_cough_dataset()
 
-    PlotMfcc(X_train[190])
-    exit()
-
-    #print(X_test.shape[1:])
-    #print(Y_train[1])
-    #PlotMfcc(X_test[0])
-
-    # load json and create model
-    json_file = open('model.json', 'r')
-    loaded_model_json = json_file.read()
-    json_file.close()
-    loaded_model = models.model_from_json(loaded_model_json)
-    # load weights into new model
-    loaded_model.load_weights("SAweights.h5")
+    #Load model
+    loaded_model = models.load_model(DIR_PATH+'/models/model_SA_1Out_a1.h5')
 
     print("Loaded model from disk")
 
+    #To freeze layers all layers except the last (dense):
+    for layer in range(len(loaded_model.layers)-1):
+        loaded_model.layers[layer].trainable = False
+
+
     loaded_model.compile(loss='categorical_crossentropy', optimizer=opt,
                   metrics=['accuracy'])
+
+
     trained_model = train_model(loaded_model, epochs, batch_size, X_train, Y_train, X_val, Y_val, X_test, Y_test)
 
-    model_name = "SAtransfered"
+    model_name = "SAtransfered_frozen"
 
     # Save model to h5 file
     trained_model.save('models/model_%s_a1.h5' %model_name)
