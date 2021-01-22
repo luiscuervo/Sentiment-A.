@@ -7,6 +7,7 @@ import wave
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle
+import pandas as pd
 
 from pydub import AudioSegment
 
@@ -34,6 +35,86 @@ def save_dataframe(X_train, Y_train, X_test, Y_test):           #Not working
 
     df = pd.DataFrame({ 'X train': Xtr, 'Y train': Ytr, 'X test': Xte, 'Y test': Yte})
     df.to_csv(index=False)
+
+    return None
+
+def PlotAudio(data, fs):
+
+    time = np.arange(0,len(data))/fs
+
+    plt.plot(time,data)
+    plt.xlabel('Time [s]')
+    plt.ylabel('Amplitude')
+    plt.title('Time-domain signal')
+    plt.show()
+
+    return None
+
+def match_wavs(f1, f2):
+    sound_file_1 = AudioSegment.from_wav(f1)
+    samples_1 = sound_file_1.get_array_of_samples()
+
+    sound_file_2 = AudioSegment.from_wav(f2)
+    samples_2 = sound_file_2.get_array_of_samples()
+
+    n1 = len(samples_1)
+    n2 = len(samples_2)
+
+    if n1 > n2:
+        z = np.zeros(n1-n2)
+        samples_2.append(z)
+        print(len(samples_2), len(samples_1))
+
+    elif n2 > n1:
+        z = np.zeros(n1 - n2)
+        samples_1.append(z)
+        print(len(samples_2), len(samples_1))
+
+    else:
+        print('samples have equal lengths')
+
+    return samples_1, samples_2
+
+
+def from_mp3_dir_to_wav():
+    from glob import glob
+    import librosa
+    import soundfile as sf
+
+
+    # files
+    src = "/Users/luisj/Desktop/SentimentAnalysis/dataset-main/raw"
+    dst = "/Users/luisj/Desktop/SentimentAnalysis/dataset-main/WAV"
+
+    af = glob(src +'/*.mp3')
+    #audios = np.asarray(af)
+    #print(audios.shape)
+
+
+
+    for f in range(len(af)):
+        a, fs = librosa.load(af[f])
+        sf.write(dst+'/%s.wav' %f, a, fs)
+        print(f)
+    #PlotAudio(a, fs)
+
+    return None
+
+
+def from_mp3_file_to_wav(file,src, dst):
+    import librosa
+    import soundfile as sf
+
+    # files
+    #src = "/Users/luisj/Desktop/SentimentAnalysis/dataset-main/raw"
+    #dst = "/Users/luisj/Desktop/SentimentAnalysis/dataset-main/WAV"
+
+
+    a, fs = librosa.load(src+'/%s' %file)
+    new_filename = file.replace('.mp3','.wav')
+    sf.write(dst + '/' + new_filename, a, fs)
+
+    # PlotAudio(a, fs)
 
     return None
 
@@ -117,6 +198,33 @@ class DataFetcherSentimentSpeech:
 
         return mfcc_array
 
+#OUTDATED, NOT USED
+def get_covid_files(path = DIR_PATH):   #Outdated
+    '''Returns the pandas series with files names and the series y with labels, where [1,0] = positive '''
+    X=[]
+    Y=[]
+    json_path = path + '/dataset-main/metadata.json'
+    df = pd.read_json(json_path)
+    df = df.sample(frac=1).reset_index(drop=True)   #Arrange rows in random order
+
+    for file in df.filename:
+        X.append(file)
+
+    X = np.asarray(X)
+
+    for c in df.covid19:
+        if c == True:
+            Y.append([1, 0])
+        elif c==False:
+            Y.append([0, 1])
+
+    print('m =', len(X))
+
+    return X, Y
+
+
+
+
 def get_sentiment_files(source_path=DIR_PATH):
     '''Returns the files within the Audio_Speech directories'''
     authors = [f for f in os.listdir(source_path + '/Audio_Speech_Actors_01-24/')]
@@ -125,6 +233,7 @@ def get_sentiment_files(source_path=DIR_PATH):
     Y = []
     for author in authors:
         books.extend([author + '/' + f for f in os.listdir(source_path + '/Audio_Speech_Actors_01-24/' + author + '/')])
+
 
     for book in books:
         idx = book.find('-')
@@ -154,7 +263,7 @@ def get_sentiment_data():
         X.append(audios[0])
 
     y_one_hot = []
-    for y in Y:
+    '''for y in Y:
         if y == '01':
             y_one_hot.append([1,0,0,0,0,0,0,0])
         elif y == '02':
@@ -172,8 +281,47 @@ def get_sentiment_data():
         elif y == '08':
             y_one_hot.append([0,0,0,0,0,0,0,1]) #Originalmente [1,0,0,0,0,0,0,1]
         else:
-            print(y)
+            print(y)'''
 
+    '''for y in Y:
+            if y == '01':
+                y_one_hot.append([1,0])
+            elif y == '02':
+                y_one_hot.append([1,0])
+            elif y == '03':
+                y_one_hot.append([1,0])
+            elif y == '04':
+                y_one_hot.append([1,0])
+            elif y == '05':
+                y_one_hot.append([0,1])
+            elif y == '06':
+                y_one_hot.append([1,0])
+            elif y == '07':
+                y_one_hot.append([1,0])
+            elif y == '08':
+                y_one_hot.append([1,0]) #Originalmente [1,0,0,0,0,0,0,1]
+            else:
+                print(y)'''
+
+    for y in Y:
+        if y == '01':
+            y_one_hot.append([0])
+        elif y == '02':
+            y_one_hot.append([0])
+        elif y == '03':
+            y_one_hot.append([0])
+        elif y == '04':
+            y_one_hot.append([0])
+        elif y == '05':
+            y_one_hot.append([1])
+        elif y == '06':
+            y_one_hot.append([0])
+        elif y == '07':
+            y_one_hot.append([0])
+        elif y == '08':
+            y_one_hot.append([0])  # Originalmente [1,0,0,0,0,0,0,1]
+        else:
+            print(y)
 
     X = np.asarray(X)
     y_one_hot = np.asarray(y_one_hot)
@@ -199,3 +347,14 @@ def get_sentiment_data():
     #
     #
     # return (audios, trans)
+
+def main():
+    '''for testing'''
+    X, Y = get_sentiment_files()
+    print(X)
+    print(Y)
+
+    return None
+
+if __name__ == '__main__':
+    main()
